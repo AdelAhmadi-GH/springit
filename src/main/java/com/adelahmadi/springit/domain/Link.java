@@ -14,11 +14,11 @@ import java.util.List;
 @Entity
 @NoArgsConstructor
 @Data
-public class Link {
+public class Link extends Auditable {
 
     @Id
     @GeneratedValue
-    private Long link_id;
+    private Long linkId;
     @NonNull
     private String title;
     @NonNull

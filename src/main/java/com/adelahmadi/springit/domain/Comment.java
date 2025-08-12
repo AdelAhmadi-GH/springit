@@ -7,11 +7,11 @@ import lombok.NoArgsConstructor;
 @Entity
 @NoArgsConstructor
 @Data
-public class Comment {
+public class Comment extends Auditable {
 
     @Id
     @GeneratedValue
-    private Long comment_id;
+    private Long commentId;
     private String body;
 
     // link
