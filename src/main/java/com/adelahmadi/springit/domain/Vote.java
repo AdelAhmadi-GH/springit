@@ -1,6 +1,5 @@
 package com.adelahmadi.springit.domain;
 
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
@@ -15,7 +14,7 @@ public class Vote {
     @Id
     @GeneratedValue
     private Long voteId;
-    private int value;
+    private int voteCounter;
 
     // user
     // link

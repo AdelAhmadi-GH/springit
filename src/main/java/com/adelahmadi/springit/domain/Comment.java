@@ -16,6 +16,7 @@ public class Comment extends Auditable {
 
     // link
     @ManyToOne
+    @JoinColumn(name = "link_id")
     private Link link;
 
 /* Replaced by Lombok annotations
