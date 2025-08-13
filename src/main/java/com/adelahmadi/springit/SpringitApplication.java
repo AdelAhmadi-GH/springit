@@ -29,7 +29,25 @@ public class SpringitApplication {
 		logger.info("The Application \"Springit\" has started successfully");
 	}
 
-	@Bean
+	// CommandLineRunner is a functional interface that can be used to run code
+	// after the application context is loaded.
+	// It is typically used to execute code that needs to run once the application
+	// has started, such as initializing the database with sample data.
+	// The method commandLineRunner will be executed after the application context
+	// is loaded.
+	// The parameters linkRepository and commentRepository are automatically
+	// injected by Spring, allowing you to use them to interact with the database.
+	// The @Bean annotation indicates that this method produces a bean to be managed
+	// by the Spring container.
+	// After performing the necessary tests in the previous section, @Bean is
+	// commented out so that when the application is started, it does not create
+	// sample data again.
+	// If you want to run this code again, you can uncomment the @Bean annotation.
+	// Uncommenting the @Bean annotation will allow the commandLineRunner method to
+	// be executed when the application starts.
+	// This is useful for initializing the database with sample data or performing
+	// other startup tasks.
+	// @Bean
 	CommandLineRunner commandLineRunner(LinkRepository linkRepository, CommentRepository commentRepository) {
 		return args -> {
 
