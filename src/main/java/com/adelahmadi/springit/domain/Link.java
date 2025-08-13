@@ -44,4 +44,18 @@ public class Link extends Auditable {
     @OneToMany(mappedBy = "link")
     private List<Comment> comments = new ArrayList<>();
 
+    /**
+     * Adds a comment to the link.
+     *
+     * @param comment the comment to be added
+     *                This method adds a comment to the link's list of comments.
+     *                It is typically used to maintain the relationship between a
+     *                link and its comments.
+     */
+    public void addComment(Comment comment) {
+        comments.add(comment);
+    }
+
+    // All prerequisites for this class are memorized through the Lombok annotations
+    // written at the beginning of the class.
 }
