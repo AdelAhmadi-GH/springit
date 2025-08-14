@@ -11,6 +11,7 @@ import com.adelahmadi.springit.domain.Link;
 import com.adelahmadi.springit.repository.CommentRepository;
 import com.adelahmadi.springit.repository.LinkRepository;
 
+import org.ocpsoft.prettytime.PrettyTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,6 +28,11 @@ public class SpringitApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(SpringitApplication.class, args);
 		logger.info("The Application \"Springit\" has started successfully");
+	}
+
+	@Bean
+	PrettyTime prettyTime() {
+		return new PrettyTime();
 	}
 
 	// CommandLineRunner is a functional interface that can be used to run code
