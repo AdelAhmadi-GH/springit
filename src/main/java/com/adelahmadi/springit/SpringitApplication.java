@@ -20,7 +20,10 @@ import org.slf4j.LoggerFactory;
 // @EnableJpaAuditing is used to enable JPA auditing features, such as automatically setting created and modified timestamps on entities.
 // This is useful for tracking when entities are created or modified in the database.
 @SpringBootApplication
-@EnableJpaAuditing
+// @EnableJpaAuditing // We hade to remove this annotation from the
+// SecurityConfig.java file
+// because it was causing a circular dependency issue with the
+// UserDetailsServiceImpl bean.
 public class SpringitApplication {
 
 	private static final Logger logger = LoggerFactory.getLogger(SpringitApplication.class);

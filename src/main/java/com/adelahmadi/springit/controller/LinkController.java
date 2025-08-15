@@ -63,11 +63,7 @@ public class LinkController {
         model.addAttribute("link", link.get());
         logger.info("Link found: {}", link.get().getTitle());
 
-        // model.addAttribute(ATTR_SUCCESS, model.getAttribute(ATTR_SUCCESS)); // use
-        // constant
-
-        return "link/view"; // Assuming you have a Thymeleaf template named "details.html" to display link
-                            // details
+        return "link/view";
     }
 
     @GetMapping("/link/submit")

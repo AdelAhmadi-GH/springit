@@ -1,16 +1,23 @@
 package com.adelahmadi.springit.bootstrap;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import com.adelahmadi.springit.domain.Link;
+import com.adelahmadi.springit.domain.Role;
+import com.adelahmadi.springit.domain.User;
 import com.adelahmadi.springit.repository.CommentRepository;
 import com.adelahmadi.springit.repository.LinkRepository;
+import com.adelahmadi.springit.repository.RoleRepository;
+import com.adelahmadi.springit.repository.UserRepository;
 
 @Component
 public class DatabaseLoader implements CommandLineRunner {
@@ -18,14 +25,28 @@ public class DatabaseLoader implements CommandLineRunner {
 
         private final LinkRepository linkRepository;
         private final CommentRepository commentRepository;
+        private final UserRepository userRepository;
+        private final RoleRepository roleRepository;
 
-        public DatabaseLoader(LinkRepository linkRepository, CommentRepository commentRepository) {
+        public DatabaseLoader(LinkRepository linkRepository, CommentRepository commentRepository,
+                        UserRepository userRepository, RoleRepository roleRepository) {
+                // Constructor injection for repositories
                 this.linkRepository = linkRepository;
                 this.commentRepository = commentRepository;
+                this.userRepository = userRepository;
+                this.roleRepository = roleRepository;
         }
 
         @Override
         public void run(String... args) {
+                addUsersAndroles(); // Ensure users and roles are created before links
+                addSomeLinks(); // Load sample links into the database
+        }
+
+        private void addSomeLinks() {
+                // Sample data to load into the database, Email and URL are just examples
+                // You can replace these with actual data or leave it empty to start fresh.
+                // This is just an example, you can modify it as needed
                 Map<String, String> links = new HashMap<>();
                 links.put("Securing Spring Boot APIs and SPAs with OAuth 2.0",
                                 "https://auth0.com/blog/securing-spring-boot-apis-and-spas-with-oauth2/?utm_source=reddit&utm_medium=sc&utm_campaign=springboot_spa_securing");
@@ -64,7 +85,39 @@ public class DatabaseLoader implements CommandLineRunner {
                 long commentCount = commentRepository.count();
 
                 logger.info("Database loaded with {} links and {} comments", linkCount, commentCount);
+        }
 
+        private void addUsersAndroles() {
+                BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+                // Generate a secure random password for demonstration; replace with environment
+                // variable or config in production
+                String rawPassword = java.util.UUID.randomUUID().toString();
+                String secret = "{bcrypt}" + encoder.encode(rawPassword);
+                logger.info("Generated secure password for demo users: {}", rawPassword);
+
+                Role userRole = new Role("ROLE_USER");
+                roleRepository.save(userRole);
+                Role adminRole = new Role("ROLE_ADMIN");
+                roleRepository.save(adminRole);
+
+                User user = new User("user@gmail.com", secret);
+                user.setEnabled(true);
+
+                user.addRole(userRole);
+                userRepository.save(user);
+
+                User admin = new User("admin@gmail.com", secret);
+                user.setEnabled(true);
+                admin.addRole(adminRole);
+                userRepository.save(admin);
+
+                User master = new User("master@gmail.com", secret);
+                user.setEnabled(true);
+                master.addRoles(new HashSet<>(Arrays.asList(userRole, adminRole)));
+                userRepository.save(master);
+
+                logger.info("Database loaded with {} users and {} roles",
+                                userRepository.count(), roleRepository.count());
         }
 
 }
