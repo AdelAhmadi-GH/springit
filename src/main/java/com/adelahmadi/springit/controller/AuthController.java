@@ -12,4 +12,14 @@ public class AuthController {
         return "auth/login"; // Ensure you have a login.html in your templates directory
     }
 
+    @GetMapping("/profile")
+    public String profile() {
+        return "auth/profile";
+    }
+
+    @GetMapping("/register")
+    public String register() {
+        return "auth/register";
+    }
+
 }

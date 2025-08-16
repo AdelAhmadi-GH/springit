@@ -5,6 +5,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
+import org.thymeleaf.extras.springsecurity6.dialect.SpringSecurityDialect;
 
 import com.adelahmadi.springit.domain.Comment;
 import com.adelahmadi.springit.domain.Link;
@@ -36,6 +37,11 @@ public class SpringitApplication {
 	@Bean
 	PrettyTime prettyTime() {
 		return new PrettyTime();
+	}
+
+	@Bean
+	public org.thymeleaf.extras.springsecurity6.dialect.SpringSecurityDialect springSecurityDialect() {
+		return new org.thymeleaf.extras.springsecurity6.dialect.SpringSecurityDialect();
 	}
 
 	// CommandLineRunner is a functional interface that can be used to run code

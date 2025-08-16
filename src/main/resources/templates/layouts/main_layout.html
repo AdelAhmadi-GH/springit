@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<!-- Tymeleaf and Spring Security namespace -->
 
 <head th:fragment="head(title)">
     <meta charset="utf-8">
@@ -15,6 +16,7 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Oswald|Roboto">
     <!-- Font Awesome (for icons) -->
     <script defer src="https://use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
+
 </head>
 
 <body>
@@ -39,28 +41,28 @@
                     </li>
 
                     <!-- if user is signed in -->
-                    <li class="nav-item">
+                    <li class="nav-item" sec:authorize="isAuthenticated()">
                         <a class="nav-link" th:href="@{/link/submit}">
                             <i class="fa fa-link" aria-hidden="true"></i> Submit Link</a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="../auth/profile.html">
+                    <li class="nav-item" sec:authorize="isAuthenticated()">
+                        <a class="nav-link" th:href="@{/profile}">
                             <i class="fa fa-user" aria-hidden="true"></i> Account</a>
                     </li>
                     <li class="nav-item">
-                        <form method="POST" th:action="@{/logout}">
+                        <form method="POST" th:action="@{/logout}" sec:authorize="isAuthenticated()">
                             <button class="nav-link"><i class="fa fa-sign-out-alt" aria-hidden="true"></i> Sign
                                 Out</button>
                         </form>
                     </li>
 
                     <!-- if user is not signed in -->
-                    <li class="nav-item">
-                        <a class="nav-link" href=../auth/login.html>
+                    <li class="nav-item" sec:authorize="!isAuthenticated()">
+                        <a class="nav-link" th:href="@{/login}">
                             <i class="fa fa-sign-in-alt" aria-hidden="true"></i> Sign In</a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="../auth/register.html">
+                    <li class="nav-item" sec:authorize="!isAuthenticated()">
+                        <a class="nav-link" th:href="@{/register}">
                             <i class="fa fa-user-plus" aria-hidden="true"></i> Register</a>
                     </li>
                 </ul>
@@ -84,6 +86,9 @@
     <div class="container" th:fragment="content">
         <p>This is your main content</p>
     </div>
+
+
+
 
 </body>
 

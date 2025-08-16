@@ -1,82 +1,71 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-  <head
-    th:replace="~{layouts/main_layout :: head(title = 'Springit - Spring Boot Reddit Clone')}"
-  >
-    <title>Springit - Spring Boot Reddit Clone</title>
-    <!-- head content will be fully replaced by the fragment -->
-  </head>
-  <body>
-    <!-- Top navigation and jumbotron pulled from layout fragments -->
-    <nav th:replace="~{layouts/main_layout :: nav}"></nav>
-    <div th:replace="~{layouts/main_layout :: jumbotron}"></div>
 
-    <div class="container" th:fragment="content">
-      <!-- links list -->
-      <div class="row link" th:each="link : ${links}">
-        <!-- votes -->
-        <div class="col-1">
-          <div>
-            <a href="#" class="upvote"><i class="fas fa-arrow-up"></i></a>
-          </div>
-          <div><span class="votecount">3</span></div>
-          <div>
-            <a href="#" class="downvote"><i class="fas fa-arrow-down"></i></a>
-          </div>
+<head th:replace="~{layouts/main_layout :: head(title = 'Springit - Spring Boot Reddit Clone')}">
+  <title>Springit - Spring Boot Reddit Clone</title>
+  <link rel="icon" type="image/x-icon" href="/src/main/resources/static/favicon.ico" />
+  <!-- head content will be fully replaced by the fragment -->
+</head>
+
+<body>
+  <!-- Top navigation and jumbotron pulled from layout fragments -->
+  <nav th:replace="~{layouts/main_layout :: navigation}"></nav>
+  <div th:replace="~{layouts/main_layout :: jumbotron}"></div>
+
+  <div class="container" th:fragment="content">
+    <!-- links list -->
+    <div class="row link" th:each="link : ${links}">
+      <!-- votes -->
+      <div class="col-1">
+        <div>
+          <a href="#" class="upvote"><i class="fas fa-arrow-up"></i></a>
         </div>
-
-        <!-- link body -->
-        <div class="col-11">
-          <p class="title">
-            <!-- Safe URL building to the link details -->
-            <a
-              class="title"
-              th:href="@{/link/{id}(id=${link.linkId})}"
-              th:text="${link.title}"
-            >
-              Title Goes Here
-            </a>
-
-            <!-- domain display; keep anchors tidy and on one line for strict parsers -->
-            <span class="domain">
-              (
-              <a th:attr="href=${link.url}" th:text="${link.getDomainName()}"
-                >therealdanvega.com</a
-              >
-              )
-            </span>
-          </p>
-
-          <p class="tagline">
-            submitted
-            <!-- If your model supplies ISO date, these attributes will render semantic time -->
-            <time
-              th:title="${link.getCreationDate()}"
-              th:datetime="${link.getCreationDate()}"
-              class="live-timestamp"
-              th:text="${link.getPrettyTime()}"
-            >
-              1 hour(s)
-            </time>
-            by
-            <a href="/" class="author" th:text="${link.createdBy}">author</a>
-          </p>
-
-          <p>
-            <!-- comments anchor; use literal substitution form to avoid concat parsing issues -->
-            <a
-              th:href="@{|/link/${link.linkId}#comments|}"
-              class="comments"
-              th:text="|${link.getComments().size()} comments|"
-            >
-              <i class="fas fa-comments"></i> 0 comments
-            </a>
-            <a href="/" class="share">
-              <i class="fas fa-share-square"></i> share
-            </a>
-          </p>
+        <div><span class="votecount">3</span></div>
+        <div>
+          <a href="#" class="downvote"><i class="fas fa-arrow-down"></i></a>
         </div>
       </div>
+
+      <!-- link body -->
+      <div class="col-11">
+        <p class="title">
+          <!-- Safe URL building to the link details -->
+          <a class="title" th:href="@{/link/{id}(id=${link.linkId})}" th:text="${link.title}">
+            Title Goes Here
+          </a>
+
+          <!-- domain display; keep anchors tidy and on one line for strict parsers -->
+          <span class="domain">
+            (
+            <a th:attr="href=${link.url}" th:text="${link.getDomainName()}">therealdanvega.com</a>
+            )
+          </span>
+        </p>
+
+        <p class="tagline">
+          submitted
+          <!-- If your model supplies ISO date, these attributes will render semantic time -->
+          <time th:title="${link.getCreationDate()}" th:datetime="${link.getCreationDate()}" class="live-timestamp"
+            th:text="${link.getPrettyTime()}">
+            1 hour(s)
+          </time>
+          by
+          <a href="/" class="author" th:text="${link.createdBy}">author</a>
+        </p>
+
+        <p>
+          <!-- comments anchor; use literal substitution form to avoid concat parsing issues -->
+          <a th:href="@{|/link/${link.linkId}#comments|}" class="comments"
+            th:text="|${link.getComments().size()} comments|">
+            <i class="fas fa-comments"></i> 0 comments
+          </a>
+          <a href="/" class="share">
+            <i class="fas fa-share-square"></i> share
+          </a>
+        </p>
+      </div>
     </div>
-  </body>
+  </div>
+</body>
+
 </html>
