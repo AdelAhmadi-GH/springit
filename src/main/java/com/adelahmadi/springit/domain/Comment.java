@@ -1,5 +1,12 @@
 package com.adelahmadi.springit.domain;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+
+import org.ocpsoft.prettytime.PrettyTime;
+
+import com.adelahmadi.springit.service.BeanUtil;
+
 import io.micrometer.common.lang.NonNull;
 import jakarta.persistence.*;
 import lombok.EqualsAndHashCode;
@@ -7,6 +14,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+
+import java.util.Date;
 
 @Entity
 @Table(name = "comment")
@@ -32,6 +41,21 @@ public class Comment extends Auditable {
     @NonNull
     private Link link;
 
+    // Convenience constructor for creating a comment with body and link
+    public Comment(String body, Link link) {
+        this.body = body;
+        this.link = link;
+    }
 
-//  All prerequisites for this class are memorized through the Lombok annotations written at the beginning of the class. 
+    public String getPrettyTime() {
+        PrettyTime pt = BeanUtil.getBean(PrettyTime.class);
+        return pt.format(convertToDateViaInstant(getCreationDate()));
+    }
+
+    private Date convertToDateViaInstant(LocalDateTime dateToConvert) {
+        return java.util.Date.from(dateToConvert.atZone(ZoneId.systemDefault()).toInstant());
+    }
+
+    // All prerequisites for this class are memorized through the Lombok annotations
+    // written at the beginning of the class.
 }

@@ -11,6 +11,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import com.adelahmadi.springit.domain.Comment;
 import com.adelahmadi.springit.domain.Link;
 import com.adelahmadi.springit.domain.Role;
 import com.adelahmadi.springit.domain.User;
@@ -78,8 +79,23 @@ public class DatabaseLoader implements CommandLineRunner {
                 // Without this, 'new Link(k, v)' would cause a "constructor undefined" compile
                 // error.
                 // Ensure Lombok annotation processing is enabled in the IDE so this works.
-                links.forEach((k, v) -> linkRepository.save(new Link(k, v)));
-                // we will do something with comments later
+                links.forEach((k, v) -> {
+                        Link link = new Link(k, v);
+                        linkRepository.save(link);
+
+                        // we will do something with comments later
+                        Comment spring = new Comment(
+                                        "Thank you for this link related to Spring Boot. I love it, great post!", link);
+                        Comment security = new Comment("I love that you're talking about Spring Security", link);
+                        Comment pwa = new Comment(
+                                        "What is this Progressive Web App thing all about? PWAs sound really cool.",
+                                        link);
+                        Comment[] comments = { spring, security, pwa };
+                        for (Comment comment : comments) {
+                                commentRepository.save(comment);
+                                link.addComment(comment);
+                        }
+                });
 
                 long linkCount = linkRepository.count();
                 long commentCount = commentRepository.count();
