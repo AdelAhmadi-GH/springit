@@ -89,9 +89,9 @@ public class DatabaseLoader implements CommandLineRunner {
 
         private void addUsersAndroles() {
                 BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-                // Generate a secure random password for demonstration; replace with environment
-                // variable or config in production
-                String rawPassword = java.util.UUID.randomUUID().toString();
+                // Generate a secure random password for demonstration; replace with env
+                // variable in production
+                String rawPassword = "p@ssword!123"; // java.util.UUID.randomUUID().toString
                 String secret = "{bcrypt}" + encoder.encode(rawPassword);
                 logger.info("Generated secure password for demo users: {}", rawPassword);
 
@@ -102,19 +102,21 @@ public class DatabaseLoader implements CommandLineRunner {
 
                 User user = new User("user@gmail.com", secret);
                 user.setEnabled(true);
-
                 user.addRole(userRole);
                 userRepository.save(user);
+                logger.info("Created user: {} with roles: {}", user.getEmail(), user.getRoles());
 
                 User admin = new User("admin@gmail.com", secret);
-                user.setEnabled(true);
+                admin.setEnabled(true);
                 admin.addRole(adminRole);
                 userRepository.save(admin);
+                logger.info("Created user: {} with roles: {}", admin.getEmail(), admin.getRoles());
 
                 User master = new User("master@gmail.com", secret);
-                user.setEnabled(true);
+                master.setEnabled(true);
                 master.addRoles(new HashSet<>(Arrays.asList(userRole, adminRole)));
                 userRepository.save(master);
+                logger.info("Created user: {} with roles: {}", master.getEmail(), master.getRoles());
 
                 logger.info("Database loaded with {} users and {} roles",
                                 userRepository.count(), roleRepository.count());

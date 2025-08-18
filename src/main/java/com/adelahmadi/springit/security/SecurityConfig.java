@@ -16,7 +16,7 @@ import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointR
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity // If you want @PreAuthorize/@Secured
+@EnableMethodSecurity(securedEnabled = false, prePostEnabled = false, jsr250Enabled = false)
 public class SecurityConfig {
 
     private UserDetailsServiceImpl userDetailsService;

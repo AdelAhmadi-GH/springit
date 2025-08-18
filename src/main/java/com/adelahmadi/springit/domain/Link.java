@@ -59,9 +59,14 @@ public class Link extends Auditable {
     @OneToMany(mappedBy = "link")
     private List<Comment> comments = new ArrayList<>();
 
+    @OneToMany(mappedBy = "link")
+    private List<Vote> votes = new ArrayList<>();
+
     public void addComment(Comment comment) {
         comments.add(comment);
     }
+
+    private int voteCount = 0;
 
     // All prerequisites for this class are memorized through the Lombok annotations
     // written at the beginning of the class.

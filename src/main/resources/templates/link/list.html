@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<!-- Tymeleaf and Spring Security namespace -->
 
 <head th:replace="~{layouts/main_layout :: head(title = 'Springit - Spring Boot Reddit Clone')}">
   <title>Springit - Spring Boot Reddit Clone</title>
@@ -17,13 +18,10 @@
     <div class="row link" th:each="link : ${links}">
       <!-- votes -->
       <div class="col-1">
-        <div>
-          <a href="#" class="upvote"><i class="fas fa-arrow-up"></i></a>
-        </div>
-        <div><span class="votecount">3</span></div>
-        <div>
-          <a href="#" class="downvote"><i class="fas fa-arrow-down"></i></a>
-        </div>
+        <div><a href="#" class="upvote" th:data-id="${link.linkId}"><i class="fas fa-arrow-up"></i></a></div>
+        <div><span th:id="|votecount-${link.linkId}|" class="votecount" th:text="${link.getVoteCount()}">0</span></div>
+        <div><a href="#" class="downvote" th:data-id="${link.linkId}" th:disabled="true"><i
+              class="fas fa-arrow-down"></i></a></div>
       </div>
 
       <!-- link body -->
@@ -66,6 +64,91 @@
       </div>
     </div>
   </div>
+
+  <!-- 1) Anonymous users: show popup asking to sign in -->
+  <script sec:authorize="isAnonymous()">
+    document.addEventListener("DOMContentLoaded", () => {
+      const voteBtnsAnon = document.querySelectorAll(".upvote, .downvote");
+      for (const el of voteBtnsAnon) {
+        el.addEventListener("click", (e) => {
+          e.preventDefault();
+          alert("You must sign in to vote. Please create an account or log in.");
+        });
+      }
+    });
+  </script>
+
+  <!-- 2) Authenticated but NOT ROLE_USER: show popup explaining the restriction -->
+  <script sec:authorize="isAuthenticated() and !hasRole('ROLE_USER')">
+    document.addEventListener("DOMContentLoaded", () => {
+      const voteBtnsNoRole = document.querySelectorAll(".upvote, .downvote");
+      for (const el of voteBtnsNoRole) {
+        el.addEventListener("click", (e) => {
+          e.preventDefault();
+          alert("Only users with ROLE_USER are allowed to vote.");
+        });
+      }
+    });
+  </script>
+
+  <!-- 3) ROLE_USER: allow voting and update the counter safely -->
+  <script sec:authorize="hasRole('ROLE_USER')">
+    document.addEventListener("DOMContentLoaded", () => {
+      const voteBtns = document.querySelectorAll(".upvote, .downvote");
+
+      for (const el of voteBtns) {
+        const className = el.className;
+
+        el.addEventListener("click", (event) => {
+          event.preventDefault();
+
+          const voteType = className === "upvote" ? 1 : -1;
+          const linkID = el.getAttribute("data-id");
+          const voteSum = document.getElementById(`votecount-${linkID}`);
+          const voteSumValue = voteSum.textContent;
+
+          fetch(`/votes/link/${linkID}/voteType/${voteType}/votecount/${voteSumValue}`, {
+            method: "GET",
+            headers: { "Accept": "application/json" }
+          })
+            .then(async (res) => {
+              // Backend returns a JSON number in all cases per your controller
+              try {
+                const data = await res.json();
+                return data;
+              } catch (e) {
+                const txt = await res.text();
+                console.error("Non-JSON response:", txt);
+                alert("Unexpected server response. Please try again later.");
+                return null;
+              }
+            })
+            .then((data) => {
+              if (typeof data === "number" && Number.isFinite(data)) {
+                voteSum.textContent = String(data);
+              } else if (data != null) {
+                console.warn("Vote not applied. Counter unchanged.");
+              }
+            })
+            .catch((err) => {
+              console.error(err);
+              alert("Voting failed due to a network or server error.");
+            });
+        });
+      }
+    });
+  </script>
+
+  <script th:inline="javascript">
+    /*<![CDATA[*/
+    const currentUser = /*[[${#authentication.name}]]*/ 'anonymous';
+    const currentRoles = /*[[${#authentication.authorities}]]*/ '[]';
+
+    console.log("👤 Current user:", currentUser);
+    console.log("🔑 Roles:", currentRoles);
+    /*]]>*/
+  </script>
+
 </body>
 
 </html>

@@ -1,6 +1,7 @@
 package com.adelahmadi.springit.bootstrap;
 
 public class InitialRoles {
+
     private InitialRoles() {
         // Prevent instantiation
     }
