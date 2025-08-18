@@ -14,8 +14,9 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.adelahmadi.springit.domain.Comment;
 import com.adelahmadi.springit.domain.Link;
-import com.adelahmadi.springit.repository.CommentRepository;
-import com.adelahmadi.springit.repository.LinkRepository;
+import com.adelahmadi.springit.service.CommentService;
+import com.adelahmadi.springit.service.LinkService;
+
 import jakarta.validation.Valid;
 
 // @RequestMapping is used to map web requests to specific handler methods in a controller.
@@ -26,14 +27,14 @@ import jakarta.validation.Valid;
 public class LinkController {
     private static final Logger logger = LoggerFactory.getLogger(LinkController.class);
 
-    private final LinkRepository linkRepository;
-    private final CommentRepository commentRepository;
+    private final LinkService linkService;
+    private final CommentService commentService;
     // Constant for the success attribute key
     private static final String ATTR_SUCCESS = "success";
 
-    public LinkController(LinkRepository linkRepository, CommentRepository commentRepository) {
-        this.linkRepository = linkRepository;
-        this.commentRepository = commentRepository;
+    public LinkController(LinkService linkService, CommentService commentService) {
+        this.linkService = linkService;
+        this.commentService = commentService;
         logger.info("LinkController initialized with LinkRepository");
     }
 
@@ -49,7 +50,7 @@ public class LinkController {
     @GetMapping("/")
     public String getAllLinks(Model model) {
         logger.info("Fetching all links");
-        model.addAttribute("links", linkRepository.findAll());
+        model.addAttribute("links", linkService.findAll());
 
         return "link/list"; // Assuming you have a Thymeleaf template named "list.html" to display links
     }
@@ -70,7 +71,7 @@ public class LinkController {
             return "link/submit";
         }
         // save our link
-        linkRepository.save(link);
+        linkService.save(link);
         logger.info("New link was saved successfully");
         redirectAttributes
                 .addAttribute("id", link.getLinkId())
@@ -83,12 +84,12 @@ public class LinkController {
     // In this case, it maps the method read() to the HTTP GET request at the URL
     @GetMapping("/link/{id}")
     public String read(@PathVariable("id") Long linkId, Model model) {
-        Optional<Link> link = linkRepository.findById(linkId);
+        Optional<Link> link = linkService.findById(linkId);
         if (link.isEmpty())
             return "redirect:/";
         Link currentLink = link.get();
         Comment comment = new Comment();
-        comment.setLink(currentLink); // <-- مهم
+        comment.setLink(currentLink);
 
         model.addAttribute("comment", comment);
         model.addAttribute("link", currentLink);
@@ -101,7 +102,7 @@ public class LinkController {
         if (bindingResult.hasErrors()) {
             logger.info("There was problem adding a new comment.");
         } else {
-            commentRepository.save(comment);
+            commentService.save(comment);
             logger.info("New Comment was saved successfully!");
         }
         return "redirect:/link/" + comment.getLink().getLinkId();

@@ -1,20 +1,16 @@
 package com.adelahmadi.springit.controller;
 
-import java.util.Optional;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.annotation.Secured;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.adelahmadi.springit.domain.Link;
 import com.adelahmadi.springit.domain.Vote;
-import com.adelahmadi.springit.repository.LinkRepository;
-import com.adelahmadi.springit.repository.VoteRepository;
+import com.adelahmadi.springit.service.LinkService;
+import com.adelahmadi.springit.service.VoteService;
 
 import jakarta.annotation.security.PermitAll;
 
@@ -30,12 +26,12 @@ public class VoteController {
     private static final Logger logger = LoggerFactory.getLogger(VoteController.class);
     private static final String ALLOWED_VOTER_EMAIL = "user@gmail.com";
 
-    private final VoteRepository voteRepository;
-    private final LinkRepository linkRepository;
+    private final VoteService voteService;
+    private final LinkService linkService;
 
-    public VoteController(VoteRepository voteRepository, LinkRepository linkRepository) {
-        this.voteRepository = voteRepository;
-        this.linkRepository = linkRepository;
+    public VoteController(VoteService voteService, LinkService linkService) {
+        this.voteService = voteService;
+        this.linkService = linkService;
     }
 
     // Explane:
@@ -45,37 +41,6 @@ public class VoteController {
     // The voteType is either -1 for downvote or 1 for upvote
     // The votecount is the total number of votes for that link
     // We will implement this method to calculate the total vote count for a link
-    // @Secured(value = { "ROLE_USER" })
-    // @GetMapping("/votes/link/{linkId}/voteType/{voteType}/votecount/{votecount}")
-    // // This method will return the total vote count for a specific link
-    // // The linkId is the ID of the link for which we want to get the vote count
-    // public int getVoteCount(@PathVariable Long linkId,
-    // @PathVariable short voteType,
-    // @PathVariable int votecount) {
-    // Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-
-    // if (auth != null) {
-    // logger.info("Current user: {} | Roles: {}",
-    // auth.getName(),
-    // auth.getAuthorities());
-    // } else {
-    // logger.info("Authentication is Null!");
-    // }
-    // Optional<Link> linkOptional = linkRepository.findById(linkId);
-    // if (linkOptional.isPresent()) {
-    // Link link = linkOptional.get();
-    // Vote vote = new Vote(link);
-    // vote.setVoteType(voteType);
-    // voteRepository.save(vote);
-
-    // int updatedVoteCount = votecount + voteType;
-    // link.setVoteCount(updatedVoteCount);
-    // linkRepository.save(link);
-    // return updatedVoteCount;
-    // }
-    // return votecount;
-    // }
-
     @PermitAll
     @GetMapping(value = "/votes/link/{linkId}/voteType/{voteType}/votecount/{votecount}", produces = "application/json")
     public ResponseEntity<Integer> getVoteCount(@PathVariable Long linkId,
@@ -84,7 +49,7 @@ public class VoteController {
             Authentication auth) {
         // Step 1: Get the current vote count from the database (fallback to client
         // value if not found)
-        int currentCount = linkRepository.findById(linkId)
+        int currentCount = linkService.findById(linkId)
                 .map(Link::getVoteCount)
                 .orElse(votecount);
 
@@ -107,15 +72,15 @@ public class VoteController {
         }
 
         // Step 4: Apply vote for authorized user and update database
-        return linkRepository.findById(linkId)
+        return linkService.findById(linkId)
                 .map(link -> {
                     Vote vote = new Vote(link);
                     vote.setVoteType(voteType);
-                    voteRepository.save(vote);
+                    voteService.save(vote);
 
                     int updated = currentCount + voteType;
                     link.setVoteCount(updated);
-                    linkRepository.save(link);
+                    linkService.save(link);
 
                     logger.info("Vote applied: email={} newCount={}", email, updated);
                     return ResponseEntity.ok(Integer.valueOf(updated));
