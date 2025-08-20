@@ -48,7 +48,11 @@
             1 hour(s)
           </time>
           by
-          <a href="/" class="author" th:text="${link.createdBy}">author</a>
+          <span th:if="${link.user != null}">
+            <a th:href="@{/u/{alias}(alias=${link.user.alias})}" class="author" th:text="${link.user.alias}">author</a>
+          </span>
+
+
         </p>
 
         <p>

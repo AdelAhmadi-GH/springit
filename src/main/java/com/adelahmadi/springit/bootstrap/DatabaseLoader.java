@@ -1,63 +1,105 @@
 package com.adelahmadi.springit.bootstrap;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import com.adelahmadi.springit.domain.Comment;
 import com.adelahmadi.springit.domain.Link;
 import com.adelahmadi.springit.domain.Role;
 import com.adelahmadi.springit.domain.User;
-import com.adelahmadi.springit.repository.CommentRepository;
-import com.adelahmadi.springit.repository.LinkRepository;
-import com.adelahmadi.springit.repository.RoleRepository;
-import com.adelahmadi.springit.repository.UserRepository;
+import com.adelahmadi.springit.service.CommentService;
+import com.adelahmadi.springit.service.LinkService;
+import com.adelahmadi.springit.service.RoleService;
+import com.adelahmadi.springit.service.UserService;
+
+import lombok.RequiredArgsConstructor;
 
 @Component
+@RequiredArgsConstructor
 public class DatabaseLoader implements CommandLineRunner {
         private static final Logger logger = LoggerFactory.getLogger(DatabaseLoader.class);
 
-        private final LinkRepository linkRepository;
-        private final CommentRepository commentRepository;
-        private final UserRepository userRepository;
-        private final RoleRepository roleRepository;
+        private final LinkService linkService;
+        private final CommentService commentService;
+        private final UserService userService;
+        private final RoleService roleService;
+        private final PasswordEncoder passwordEncoder;
 
-        public DatabaseLoader(LinkRepository linkRepository, CommentRepository commentRepository,
-                        UserRepository userRepository, RoleRepository roleRepository) {
-                // Constructor injection for repositories
-                this.linkRepository = linkRepository;
-                this.commentRepository = commentRepository;
-                this.userRepository = userRepository;
-                this.roleRepository = roleRepository;
-        }
+        @Value("${app.dev.seed-password:ChangeMe!123}")
+        private String rawSeedPassword;
+        private static final String USER_EMAIL = "user@gmail.com";
+        private static final String ADMIN_EMAIL = "admin@gmail.com";
+        private static final String MASTER_EMAIL = "master@gmail.com";
 
         @Override
         public void run(String... args) {
-                addUsersAndroles(); // Ensure users and roles are created before links
-                addSomeLinks(); // Load sample links into the database
+                addUsersAndroles(); // 1) ensure users/roles exist
+                addSomeLinks(); // 2) seed links/comments
+        }
+
+        private void addUsersAndroles() {
+                String encoded = passwordEncoder.encode(rawSeedPassword);
+
+                Role userRole = roleService.save(new Role("ROLE_USER"));
+                Role adminRole = roleService.save(new Role("ROLE_ADMIN"));
+
+                if (!userService.existsByEmail(USER_EMAIL)) {
+                        User user = new User();
+                        user.setEmail(USER_EMAIL.toLowerCase(Locale.ROOT));
+                        user.setPassword(encoded);
+                        user.setFirstName("Joe");
+                        user.setLastName("User");
+                        user.setAlias("joedirt");
+                        user.setEnabled(true);
+                        user.addRole(userRole.getName());
+                        userService.saveUser(user);
+                }
+
+                if (!userService.existsByEmail(ADMIN_EMAIL)) {
+                        User admin = new User();
+                        admin.setEmail(ADMIN_EMAIL.toLowerCase(Locale.ROOT));
+                        admin.setPassword(encoded);
+                        admin.setFirstName("Joe");
+                        admin.setLastName("Admin");
+                        admin.setAlias("masteradmin");
+                        admin.setEnabled(true);
+                        admin.addRole(adminRole.getName());
+                        userService.saveUser(admin);
+                }
+
+                if (!userService.existsByEmail(MASTER_EMAIL)) {
+                        User master = new User();
+                        master.setEmail(MASTER_EMAIL.toLowerCase(Locale.ROOT));
+                        master.setPassword(encoded);
+                        master.setFirstName("Super");
+                        master.setLastName("User");
+                        master.setAlias("superduper");
+                        master.setEnabled(true);
+                        master.addRole(userRole.getName());
+                        master.addRole(adminRole.getName());
+                        userService.saveUser(master);
+                }
+
+                logger.info("Database loaded with {} users and {} roles", userService.count(), roleService.count());
         }
 
         private void addSomeLinks() {
-                // Sample data to load into the database, Email and URL are just examples
-                // You can replace these with actual data or leave it empty to start fresh.
-                // This is just an example, you can modify it as needed
-                Map<String, String> links = new HashMap<>();
+                Map<String, String> links = new LinkedHashMap<>();
                 links.put("Securing Spring Boot APIs and SPAs with OAuth 2.0",
                                 "https://auth0.com/blog/securing-spring-boot-apis-and-spas-with-oauth2/?utm_source=reddit&utm_medium=sc&utm_campaign=springboot_spa_securing");
-                links.put(
-                                "Easy way to detect Device in Java Web Application using Spring Mobile - Source code to download from GitHub",
+                links.put("Easy way to detect Device in Java Web Application using Spring Mobile - Source code to download from GitHub",
                                 "https://www.opencodez.com/java/device-detection-using-spring-mobile.htm");
                 links.put("Tutorial series about building microservices with SpringBoot (with Netflix OSS)",
                                 "https://medium.com/@marcus.eisele/implementing-a-microservice-architecture-with-spring-boot-intro-cdb6ad16806c");
-                links.put(
-                                "Detailed steps to send encrypted email using Java / Spring Boot - Source code to download from GitHub",
+                links.put("Detailed steps to send encrypted email using Java / Spring Boot - Source code to download from GitHub",
                                 "https://www.opencodez.com/java/send-encrypted-email-using-java.htm");
                 links.put("Build a Secure Progressive Web App With Spring Boot and React",
                                 "https://dzone.com/articles/build-a-secure-progressive-web-app-with-spring-boo");
@@ -74,68 +116,46 @@ public class DatabaseLoader implements CommandLineRunner {
                 links.put("File download example using Spring REST Controller",
                                 "https://www.jeejava.com/file-download-example-using-spring-rest-controller/");
 
-                // NOTE: Using Lombok's @RequiredArgsConstructor on Link entity to generate
-                // a constructor with (String title, String url) based on @NonNull fields.
-                // Without this, 'new Link(k, v)' would cause a "constructor undefined" compile
-                // error.
-                // Ensure Lombok annotation processing is enabled in the IDE so this works.
-                links.forEach((k, v) -> {
-                        Link link = new Link(k, v);
-                        linkRepository.save(link);
+                // fetch owners from DB (ensures map isn't needed)
+                User userOwner = userService.findByEmail(USER_EMAIL).orElse(null);
+                User masterOwner = userService.findByEmail(MASTER_EMAIL).orElse(userOwner);
+                if (userOwner == null && masterOwner == null) {
+                        logger.warn("No users found to own links; seeding aborted.");
+                        return;
+                }
 
-                        // we will do something with comments later
-                        Comment spring = new Comment(
+                final User u1 = userOwner != null ? userOwner : masterOwner;
+                final User u2 = masterOwner != null ? masterOwner : u1;
+
+                int created = 0;
+
+                for (Map.Entry<String, String> e : links.entrySet()) {
+                        String title = e.getKey();
+                        String url = e.getValue();
+
+                        User owner = (title.startsWith("Build")) ? u1 : u2;
+
+                        Link link = new Link(title, url);
+                        link.setUser(owner);
+                        linkService.save(link);
+                        created++;
+
+                        Comment c1 = new Comment(
                                         "Thank you for this link related to Spring Boot. I love it, great post!", link);
-                        Comment security = new Comment("I love that you're talking about Spring Security", link);
-                        Comment pwa = new Comment(
+                        Comment c2 = new Comment("I love that you're talking about Spring Security", link);
+                        Comment c3 = new Comment(
                                         "What is this Progressive Web App thing all about? PWAs sound really cool.",
                                         link);
-                        Comment[] comments = { spring, security, pwa };
-                        for (Comment comment : comments) {
-                                commentRepository.save(comment);
-                                link.addComment(comment);
-                        }
-                });
 
-                long linkCount = linkRepository.count();
-                long commentCount = commentRepository.count();
+                        commentService.save(c1);
+                        commentService.save(c2);
+                        commentService.save(c3);
 
-                logger.info("Database loaded with {} links and {} comments", linkCount, commentCount);
+                        link.addComment(c1);
+                        link.addComment(c2);
+                        link.addComment(c3);
+                }
+
+                logger.info("Seeded {} links (total now: {})", created, linkService.count());
         }
-
-        private void addUsersAndroles() {
-                BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-                // Generate a secure random password for demonstration; replace with env
-                // variable in production
-                String rawPassword = "p@ssword!123"; // java.util.UUID.randomUUID().toString
-                String secret = "{bcrypt}" + encoder.encode(rawPassword);
-                logger.info("Generated secure password for demo users: {}", rawPassword);
-
-                Role userRole = new Role("ROLE_USER");
-                roleRepository.save(userRole);
-                Role adminRole = new Role("ROLE_ADMIN");
-                roleRepository.save(adminRole);
-
-                User user = new User("user@gmail.com", secret);
-                user.setEnabled(true);
-                user.addRole(userRole);
-                userRepository.save(user);
-                logger.info("Created user: {} with roles: {}", user.getEmail(), user.getRoles());
-
-                User admin = new User("admin@gmail.com", secret);
-                admin.setEnabled(true);
-                admin.addRole(adminRole);
-                userRepository.save(admin);
-                logger.info("Created user: {} with roles: {}", admin.getEmail(), admin.getRoles());
-
-                User master = new User("master@gmail.com", secret);
-                master.setEnabled(true);
-                master.addRoles(new HashSet<>(Arrays.asList(userRole, adminRole)));
-                userRepository.save(master);
-                logger.info("Created user: {} with roles: {}", master.getEmail(), master.getRoles());
-
-                logger.info("Database loaded with {} users and {} roles",
-                                userRepository.count(), roleRepository.count());
-        }
-
 }

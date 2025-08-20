@@ -4,6 +4,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import com.adelahmadi.springit.domain.Comment;
@@ -25,6 +26,7 @@ import org.slf4j.LoggerFactory;
 // because it was causing a circular dependency issue with the
 // UserDetailsServiceImpl bean.
 @EnableTransactionManagement
+@EnableAsync
 public class SpringitApplication {
 
 	private static final Logger logger = LoggerFactory.getLogger(SpringitApplication.class);

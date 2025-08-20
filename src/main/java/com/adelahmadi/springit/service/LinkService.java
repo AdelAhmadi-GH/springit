@@ -29,4 +29,8 @@ public class LinkService {
         return linkRepository.save(link);
     }
 
+    public long count() {
+        return linkRepository.count();
+    }
+
 }

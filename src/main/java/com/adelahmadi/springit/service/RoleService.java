@@ -18,4 +18,13 @@ public class RoleService {
         return roleRepository.findByName(name);
     }
 
+    public Role save(Role role) {
+        Role existing = roleRepository.findByName(role.getName());
+        return (existing != null) ? existing : roleRepository.save(role);
+    }
+
+    public long count() {
+        return roleRepository.count();
+    }
+
 }

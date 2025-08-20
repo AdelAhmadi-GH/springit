@@ -1,59 +1,59 @@
+// src\main\java\com\adelahmadi\springit\service\UserService.java
 package com.adelahmadi.springit.service;
 
+import java.util.Locale;
+import java.util.Optional;
 import java.util.UUID;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.adelahmadi.springit.domain.User;
 import com.adelahmadi.springit.repository.UserRepository;
+import com.adelahmadi.springit.web.dto.RegisterRequest;
 
 import jakarta.transaction.Transactional;
 
 @Service
+@lombok.RequiredArgsConstructor // generates constructor for all final fields
 public class UserService {
 
-    private static final Logger logger = LoggerFactory.getLogger(UserService.class);
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UserService.class);
+
+    // repositories & services
     private final UserRepository userRepository;
-    private final BCryptPasswordEncoder encoder;
     private final RoleService roleService;
-    private MailService mailService;
+    private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
+    private final MailService mailService; // keep it final so Lombok injects it
 
-    public UserService(UserRepository userRepository, RoleService roleService, MailService mailService) {
-        this.userRepository = userRepository;
-        this.roleService = roleService;
-        this.mailService = mailService;
-        encoder = new BCryptPasswordEncoder();
-    }
+    @Transactional
+    public User register(RegisterRequest req) {
+        String email = req.getEmail().trim().toLowerCase(Locale.ROOT);
 
-    public User register(User user) {
-        // take the password from the form and encode
-        String secret = "{bcrypt}" + encoder.encode(user.getPassword());
-        user.setPassword(secret);
-        // confirm password
-        // user.setConfirmPassword(secret);
+        if (userRepository.existsByEmail(email)) {
+            throw new IllegalArgumentException("Email already in use");
+        }
 
-        // assign a role to this user
-        user.addRole(roleService.findByName("ROLE_USER"));
+        User user = new User();
+        user.setEmail(email);
+        user.setFirstName(req.getFirstName());
+        user.setLastName(req.getLastName());
+        user.setAlias(req.getAlias());
 
-        // set an activation code
-        // user.setActivationCode(UUID.randomUUID().toString());
+        user.setPassword(passwordEncoder.encode(req.getPassword()));
 
-        // disable the user
         user.setEnabled(false);
-        // save user
-        save(user);
+        user.setActivationCode(UUID.randomUUID().toString());
 
-        // send the activation email
-        // sendActivationEmail(user);
+        user.addRole(roleService.findByName("ROLE_USER").getName());
 
-        // return the user
-        return user;
+        User saved = userRepository.save(user);
+
+        sendActivationEmail(saved);
+
+        return saved;
     }
 
-    public User save(User user) {
+    public User saveUser(User user) {
         return userRepository.save(user);
     }
 
@@ -65,17 +65,28 @@ public class UserService {
         }
     }
 
-    // public void sendActivationEmail(User user) {
-    // mailService.sendActivationEmail(user);
-    // }
+    public void sendActivationEmail(User user) {
+        mailService.sendActivationEmail(user);
+    }
 
-    // public void sendWelcomeEmail(User user) {
-    // mailService.sendWelcomeEmail(user);
-    // }
+    public void sendWelcomeEmail(User user) {
+        mailService.sendWelcomeEmail(user);
+    }
 
-    // public Optional<User> findByEmailAndActivationCode(String email, String
-    // activationCode) {
-    // return userRepository.findByEmailAndActivationCode(email, activationCode);
-    // }
+    public long count() {
+        return userRepository.count();
+    }
+
+    public Optional<User> findByEmailAndActivationCode(String email, String activationCode) {
+        return userRepository.findByEmailAndActivationCode(email, activationCode);
+    }
+
+    public boolean existsByEmail(String userEmail) {
+        return userRepository.existsByEmail(userEmail.trim().toLowerCase(Locale.ROOT));
+    }
+
+    public Optional<User> findByEmail(String userEmail) {
+        return userRepository.findByEmail(userEmail.toLowerCase(Locale.ROOT));
+    }
 
 }

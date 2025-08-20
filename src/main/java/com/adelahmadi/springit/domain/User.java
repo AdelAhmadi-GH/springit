@@ -1,5 +1,11 @@
-// User.java
+// src/main/java/com/adelahmadi/springit/domain/User.java
 package com.adelahmadi.springit.domain;
+
+import java.util.Collection;
+import java.util.Locale;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.stream.Collectors;
 
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
@@ -11,21 +17,14 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.Size;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.stream.Collectors;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 /**
  * User entity implementing Spring Security's UserDetails.
@@ -36,7 +35,6 @@ import java.util.stream.Collectors;
 @Getter
 @Setter
 @NoArgsConstructor
-@RequiredArgsConstructor
 @ToString(exclude = { "password", "roles" }) // Avoid logging sensitive fields
 @Entity
 @Table(name = "users")
@@ -46,29 +44,49 @@ public class User implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long userId;
 
-    // Email is used as the username for authentication
-    @NonNull
-    @Email(message = "Email must be valid")
-    @Size(min = 8, max = 50, message = "Email must be between 8 and 50 characters")
     @Column(nullable = false, unique = true, length = 50)
     private String email;
 
-    @NonNull
-    @Column(length = 100, nullable = false)
+    @Column(nullable = false)
     private String password;
 
-    @Column(nullable = false)
-    private boolean enabled = true;
+    @Column(nullable = false, length = 50)
+    private String firstName;
 
-    // String-based roles; stored in a separate collection table
+    @Column(nullable = false, length = 50)
+    private String lastName;
+
+    @Column(nullable = false, unique = true)
+    private String alias;
+
+    @Column(nullable = false)
+    private boolean enabled = false;
+
+    private String activationCode;
+
+    /** Store roles as simple strings in a separate collection table. */
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
-    @Column(name = "role", nullable = false, length = 32)
+    @Column(name = "role", nullable = false, length = 50)
     private Set<String> roles = new HashSet<>();
+
+    /** Utility: full name. */
+    public String getFullName() {
+        return firstName + " " + lastName;
+    }
+
+    /** Normalize email on set (optional but helps consistency). */
+    public void setEmail(String email) {
+        this.email = (email == null) ? null : email.trim().toLowerCase(Locale.ROOT);
+    }
+
+    /* ========================= UserDetails ========================= */
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        // Map logical roles to authorities with ROLE_ prefix
+        if (roles == null || roles.isEmpty()) {
+            return Set.of();
+        }
         return roles.stream()
                 .map(r -> r.startsWith("ROLE_") ? r : "ROLE_" + r)
                 .map(org.springframework.security.core.authority.SimpleGrantedAuthority::new)
@@ -77,8 +95,23 @@ public class User implements UserDetails {
 
     @Override
     public String getUsername() {
-        // Email is the username for authentication
+        // We use email as the username
         return email;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true; // customize if you add fields for expiration
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true; // customize if you add fields for locking
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true; // customize if you add fields for credential expiration
     }
 
     @Override
@@ -86,18 +119,26 @@ public class User implements UserDetails {
         return enabled;
     }
 
-    // addRole methods to manage user roles
-    public void addRole(Role userRole) {
-        roles.add(userRole.getName());
+    /* ========================= Role helpers ========================= */
+
+    /** Add a role name directly, e.g., "ROLE_USER" or "USER". */
+    public void addRole(String roleName) {
+        if (roleName == null || roleName.isBlank())
+            return;
+        roles.add(roleName);
     }
 
-    // addRoles method to add multiple roles at once
-    public void addRoles(Set<Role> roles) {
-        // Add multiple roles at once
-        roles.forEach(this::addRole);
+    /** Add multiple role names at once. */
+    public void addRoles(Set<String> roleNames) {
+        if (roleNames == null || roleNames.isEmpty())
+            return;
+        roles.addAll(roleNames);
     }
 
-    // getPassword() is generated by Lombok via @Getter on 'password'
-    // Other flags (account non-expired/locked, credentials non-expired) use
-    // UserDetails defaults (true)
+    /** Remove a role name. */
+    public void removeRole(String roleName) {
+        if (roleName == null || roleName.isBlank())
+            return;
+        roles.remove(roleName);
+    }
 }

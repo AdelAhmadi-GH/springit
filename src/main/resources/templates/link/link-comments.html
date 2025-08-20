@@ -39,7 +39,10 @@
           <time th.title="${link.getCreationDate()}" th.datetime="${link.getCreationDate()}"
             th.text="${link.getPrettyTime()}" class="live-timestamp">2 hours ago</time>
           by
-          <a href="/" class="author" th:text="${link.createdBy}">author</a>
+          <span th:if="${link.user != null}">
+            <a th:href="@{/u/{alias}(alias=${link.user.alias})}" class="author" th:text="${link.user.alias}">author</a>
+          </span>
+
           <span class="userattrs"></span>
         </p>
         <p>
